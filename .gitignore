@@ -1,0 +1,11 @@
+# .gitignore
+
+.#~
+*.*~
+~.#~
+/.#~
+.vscode*
+
+venv/
+
+__pycache__/
