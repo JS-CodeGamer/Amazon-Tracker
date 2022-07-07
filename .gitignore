@@ -8,4 +8,6 @@
 
 venv/
 
+reports/
+
 __pycache__/
