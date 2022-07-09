@@ -1,10 +1,10 @@
 from selenium import webdriver
 
 DIRECTORY = 'reports'
-NAME = 'PS4'
+NAME = 'Laptops'
 CURRENCY = '₹'
-MIN_PRICE = '0'
-MAX_PRICE = '200000'
+MIN_PRICE = '60000'
+MAX_PRICE = '150000'
 FILTERS = {
     'min': MIN_PRICE,
     'max': MAX_PRICE

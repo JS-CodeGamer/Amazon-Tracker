@@ -149,10 +149,11 @@ class Report:
 
     def get_best_item(self):
         try:
-            return sorted(self.data, key=lambda k: k['price'])[0]
+            self.data = sorted(self.data, key=lambda k: k['price'])
+            return self.data[0]
         except Exception as e:
-            print(e)
             print("Problem with sorting items")
+            print(e)
             return None
 
 
@@ -213,17 +214,19 @@ class AmazonProductIndex:
         self.driver.get(f'{self.driver.current_url}{self.price_filter}')
         print(f"Our url: {self.driver.current_url}")
         time.sleep(2)  # wait to load page
-        result_list = self.driver.find_elements('css selector', '.s-result-list')
         links = []
-        try:
-            results = result_list[1].find_elements('css selector',
-                "div div div div div div div div div div h2 a")
-            links = [link.get_attribute('href') for link in results]
-            return links
-        except Exception as e:
-            print("Didn't get any products.")
-            print(e)
-            return links
+        pages = int(self.driver.find_elements('css selector', '.s-pagination-button')[-2].get_attribute('innerHTML').strip())
+        for page in range(pages):
+            self.driver.get(f'{self.driver.current_url}{self.price_filter}&page={page}')
+            result_list = self.driver.find_elements('css selector', '.s-result-list')
+            try:
+                results = result_list[1].find_elements('css selector',
+                    "div div div div div div div div div div h2 a")
+                links = [*links, *[link.get_attribute('href') for link in results]]
+            except Exception as e:
+                print(f"Didn't get any products on page {page} / {pages}.")
+                print(e)
+        return links
 
     def get_asins(self, links):
         return [self.link_to_asin(link) for link in links]
