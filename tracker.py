@@ -36,17 +36,20 @@ class AmazonProduct:
         self.driver.get(f'{self.url}?language=en_GB')
         time.sleep(2)  # wait to load page
         self.get_title()
-        if self.title: print("\tFound", end=" ")
-        else: print("\tCould not find", end=" ")
-        print("Title.")
+        if self.title:
+            print("\tTitle =", self.title)
+        else:
+            print("\tCould not find Title.")
         self.get_seller()
-        if self.title: print("\tFound", end=" ")
-        else: print("\tCould not find", end=" ")
-        print("Seller.")
+        if self.seller:
+            print("\tSeller =", self.seller)
+        else:
+            print("\tCould not find Seller.")
         self.get_price()
-        if self.title: print("\tFound", end=" ")
-        else: print("\tCould not find", end=" ")
-        print("Price.")
+        if self.price:
+            print("\tPrice =", self.price)
+        else:
+            print("\tCould not find Price.")
         if self.price:
             info_dict = {
                 'asin': self.asin,
@@ -60,7 +63,7 @@ class AmazonProduct:
 
     def get_title(self):
         try:
-            self.title = self.driver.find_element('id', 'productTitle').text
+            self.title = self.driver.find_element('css selector', '#productTitle').get_attribute('innerHTML').strip()
         except Exception as e:
             print(e)
             print(f"Can't get title of a product - {self.driver.current_url}")
@@ -68,7 +71,7 @@ class AmazonProduct:
 
     def get_seller(self):
         try:
-            self.seller = self.driver.find_element('id', 'bylineInfo').text
+            self.seller = self.driver.find_element('css selector', '#bylineInfo').get_attribute('innerHTML').strip()
         except Exception as e:
             print(e)
             print(f"Can't get seller of a product - {self.driver.current_url}")
@@ -76,21 +79,8 @@ class AmazonProduct:
 
     def get_price(self):
         try:
-            self.price = self.driver.find_elements('class name', 'a-price')[0].text
+            self.price = self.driver.find_element('css selector',"span#tp_price_block_total_price_ww span.a-price-whole").get_attribute('innerHTML').strip()
             self.convert_price()
-        except NoSuchElementException:
-            try:
-                availability = self.driver.find_element('id', 'availability').text
-                if 'Available' in availability:
-                    self.price = self.driver.find_element('class name', 'olp-padding-right').text
-                    self.price = price[price.find(self.currency):]
-                    self.convert_price()
-                else:
-                    self.price = None
-            except Exception as e:
-                print(e)
-                print(f"Can't get price of a product - {self.driver.current_url}")
-                self.price = None
         except Exception as e:
             print(e)
             print(f"Can't get price of a product - {self.driver.current_url}")
@@ -100,15 +90,14 @@ class AmazonProduct:
         self.url = self.base_url + 'dp/' + self.asin
 
     def convert_price(self):
-        self.price = self.price.split(self.currency)[1]
         try:
-            self.price = self.price.split("\n")[0] + "." + self.price.split("\n")[1]
-        except:
-            Exception()
+            self.price = self.price.split("<")[0]
+        except Exception as e:
+            print("\tEncountered exception", e, "while parsing price.")
         try:
             self.price = self.price.split(",")[0] + self.price.split(",")[1]
-        except:
-            Exception()
+        except Exception as e:
+            print("\tEncountered exception", e, "while parsing price.")
         self.price = float(self.price)
 
 
@@ -209,6 +198,7 @@ class AmazonProductIndex:
     def generate_report(self):
         print("Getting info about products...")
         products_info = [product.get_info() for product in self.products]
+        products_info = list(filter(lambda prod_info: prod_info!=None, products_info))
         print(f"Got info about {len(self.products)} products.")
         report = Report(self.search_term, products_info)
         report.create_report()
@@ -216,18 +206,18 @@ class AmazonProductIndex:
 
     def get_products_links(self):
         self.driver.get(self.base_url)
-        element = self.driver.find_element('xpath', '//*[@id="twotabsearchtextbox"]')
+        element = self.driver.find_element('css selector', '#twotabsearchtextbox')
         element.send_keys(self.search_term)
         element.send_keys(Keys.ENTER)
         time.sleep(2)  # wait to load page
         self.driver.get(f'{self.driver.current_url}{self.price_filter}')
         print(f"Our url: {self.driver.current_url}")
         time.sleep(2)  # wait to load page
-        result_list = self.driver.find_elements('class name', 's-result-list')
+        result_list = self.driver.find_elements('css selector', '.s-result-list')
         links = []
         try:
-            results = result_list[1].find_elements('xpath',
-                "//div/div/div/div/div/div/div[2]/div/div/div[1]/h2/a")
+            results = result_list[1].find_elements('css selector',
+                "div div div div div div div div div div h2 a")
             links = [link.get_attribute('href') for link in results]
             return links
         except Exception as e:
