@@ -9,7 +9,7 @@
 
 - Specify the correct config.
 - Change base url to match one for your country.
-- Change currenct to match one for Base URL.
+- Change the currency to match one showed in your Base URL.
 - Make sure to [download](https://chromedriver.chromium.org/downloads) correct chromedriver matching to the current version of your google chrome and operating system.
 
 ### Setup Python Virtual Environment
